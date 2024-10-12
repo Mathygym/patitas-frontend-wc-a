@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResponseDTO;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResquestDTO;
 import pe.edu.cibertec.patita_frontend_wc_a.viewmodel.LoginModel;
+import reactor.core.publisher.Mono;
 
 @Controller
 @RequestMapping("/login")
@@ -19,10 +20,6 @@ public class LoginControlller {
 
     @Autowired
     WebClient webClientAutenticacion;
-
-
-    //private final RestTemplate restTemplate = new RestTemplate();
-    //private final String bakcs = "http://localhost:8081/autenticacion/login";
 
     @GetMapping("/inicio")
     public String inicio(Model model) {
@@ -45,37 +42,21 @@ public class LoginControlller {
             model.addAttribute("loginModel", loginModel);
             return "inicio";
         }
-        //invokar servicio de autenticacion 20/09/24
-
-        // LoginModel loginModel = new LoginModel("00", "", "Cristopher Matias");
-        //model.addAttribute("loginModel", loginModel);
-        //return "principal";
-
-        // Crear el DTO para enviar al backend
-        //  LoginResquestDTO loginRequest = new LoginResquestDTO(tipoDocumento, numeroDocumento, password);
-        //LoginResponseDTO response = restTemplate.postForObject(bakcs, loginRequest, LoginResponseDTO.class);
-
-        //String codigo = response != null ? response.codigo() : "99";
-        //String mensaje = response != null ? response.mensaje() : "Error de conexión";
-        //String nombreUsuario = response != null && "00".equals(codigo) ? response.nombreUsuario() : "";
-
-        //model.addAttribute(
-
-
-        //      "loginModel", new LoginModel(codigo, mensaje, nombreUsuario));
-
-        // Redirigir a "principal" si la autenticación es exitosa
-        //return "00".equals(codigo) ? "principal" : "inicio";
-
-        //invokar servicio de autenticacion
-
-
 
          try {
 
 
              LoginResquestDTO loginRequestDTO = new LoginResquestDTO(tipoDocumento, numeroDocumento, password);
-             LoginResponseDTO loginResponseDTO = webClientAutenticacion.postForObject("/login", loginRequestDTO, LoginResponseDTO.class);
+
+
+             Mono<LoginResponseDTO> monoLoginResponseDTO = webClientAutenticacion.post()
+                     .uri("/login")
+                     .body(Mono.just(loginRequestDTO),LoginResquestDTO.class)
+                      .retrieve()
+                     .bodyToMono(LoginResponseDTO.class);
+
+             LoginResponseDTO loginResponseDTO = monoLoginResponseDTO.block();
+
 
              if(loginResponseDTO.codigo().equals("00")){
                  LoginModel loginModel = new LoginModel("00", "", loginResponseDTO.nombreUsuario());
