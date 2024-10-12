@@ -2,12 +2,20 @@ package pe.edu.cibertec.patita_frontend_wc_a.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResponseDTO;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResquestDTO;
 
 import reactor.core.publisher.Mono;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/login")
@@ -54,5 +62,17 @@ public class LoginControlllerAsync {
 
     }
 
+    @PostMapping("/logout-async")
+    public Mono<String> cerrarSesion(LoginResquestDTO loginResquestDTO) {
+        return webClientAutenticacion.post()
+                .uri("/cerrar-async") // Se añade la ruta al final de la base URL
+                .bodyValue(loginResquestDTO) // Envía el objeto de solicitud de cierre de sesión
+                .retrieve()
+                .bodyToMono(String.class) // Cambia el tipo según lo que devuelva tu API
+                .onErrorReturn("Error en el cierre de sesión");
+    }
+
+
+    //
     }
 
