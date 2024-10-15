@@ -63,15 +63,20 @@ public class LoginControlllerAsync {
     }
 
     @PostMapping("/logout-async")
-    public Mono<String> cerrarSesion(LoginResquestDTO loginResquestDTO) {
+    public Mono<ResponseEntity<String>> cerrarSesion(@RequestBody LoginResquestDTO loginResquestDTO) {
+        System.out.println("Datos recibidos para cerrar sesión: " + loginResquestDTO);
         return webClientAutenticacion.post()
                 .uri("/cerrar-async") // Se añade la ruta al final de la base URL
                 .bodyValue(loginResquestDTO) // Envía el objeto de solicitud de cierre de sesión
                 .retrieve()
                 .bodyToMono(String.class) // Cambia el tipo según lo que devuelva tu API
-                .onErrorReturn("Error en el cierre de sesión");
+                .map(response -> ResponseEntity.ok(response))
+                .onErrorResume(e -> {
+                    System.err.println("Error en el cierre de sesión: " + e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Error en el cierre de sesión"));
+                });
     }
-
 
     //
     }
