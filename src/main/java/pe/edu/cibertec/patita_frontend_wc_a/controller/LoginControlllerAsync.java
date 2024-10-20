@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
+import pe.edu.cibertec.patita_frontend_wc_a.client.AutenticacionClient;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResponseDTO;
 import pe.edu.cibertec.patita_frontend_wc_a.dto.LoginResquestDTO;
 
@@ -25,11 +26,14 @@ public class LoginControlllerAsync {
     @Autowired
     WebClient webClientAutenticacion;
 
-
+    @Autowired
+    AutenticacionClient autenticacionClient;
 
     @PostMapping("/autenticar-async")
     public Mono<LoginResponseDTO> autenticar(@RequestBody LoginResquestDTO loginResquestDTO) {
         //validar caompos de entrada
+
+        System.out.println("Consumo webClientAutenticacion");
 
         if(loginResquestDTO.tipoDocumento() == null || loginResquestDTO.tipoDocumento().trim().length() ==0 ||
          loginResquestDTO.numeroDocumento() == null || loginResquestDTO.numeroDocumento().trim().length() ==0 ||
@@ -59,6 +63,33 @@ public class LoginControlllerAsync {
              return Mono.just(new LoginResponseDTO("02", "Ocuarrio un problema en la autenticacion","",""));
 
          }
+
+    }
+    @PostMapping("/autenticar-Feing")
+    public Mono<LoginResponseDTO> autenticarFeing(@RequestBody LoginResquestDTO loginResquestDTO) {
+        //validar caompos de entrada
+
+        System.out.println("Consumo autenticacionClient");
+
+        if(loginResquestDTO.tipoDocumento() == null || loginResquestDTO.tipoDocumento().trim().length() ==0 ||
+                loginResquestDTO.numeroDocumento() == null || loginResquestDTO.numeroDocumento().trim().length() ==0 ||
+                loginResquestDTO.password() == null || loginResquestDTO.password().trim().length() ==0){
+            return Mono.just(new LoginResponseDTO("01", "Error : debe completar correctamente el campo","",""));
+        }
+
+        try {
+            // Consume the authentication service via Feign client
+            LoginResponseDTO response = autenticacionClient.login(loginResquestDTO);
+
+            if ("00".equals(response.codigo())) {
+                return Mono.just(new LoginResponseDTO("00", "", response.nombreUsuario(), ""));
+            } else {
+                return Mono.just(new LoginResponseDTO("02", "Error: Autenticación fallida", "", ""));
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return Mono.just(new LoginResponseDTO("02", "Ocurrió un problema en la autenticación", "", ""));
+        }
 
     }
 
